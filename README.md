@@ -1,4 +1,4 @@
-# Nu primesc notă pentru că nu am pus titlu și descriere
+# Automatic Drafter for the game League of Legends based on winrate worldwide
 
 ### Folosiți template-ul corespunzător grupei voastre!
 
