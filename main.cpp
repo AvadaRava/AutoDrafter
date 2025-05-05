@@ -1,316 +1,254 @@
-// File: Exceptions.h
-#pragma once
-#include <stdexcept>
-#include <string>
-
-// Bază pentru excepții proprii
-class LoLException : public std::exception {
-public:
-    explicit LoLException(const std::string& msg) : message_(msg) {}
-    const char* what() const noexcept override { return message_.c_str(); }
-private:
-    std::string message_;
-};
-
-// Erori specifice
-class InvalidRankException : public LoLException {
-public:
-    InvalidRankException() : LoLException("Invalid rank for operation") {}
-};
-
-class NoPlayersException : public LoLException {
-public:
-    NoPlayersException() : LoLException("No players available on server") {}
-};
-
-class DrafterException : public LoLException {
-public:
-    DrafterException() : LoLException("Drafter failed to draft") {}
-};
-
-
-// File: Rank.h
-#pragma once
-#include <string>
-#include <utility>
-#include <algorithm>
-
-class Rank {
-    std::string tier_;
-    int points_;
-public:
-    Rank(std::string tier, int points);
-    const std::string& tier() const noexcept;
-    int points() const noexcept;
-    bool operator==(Rank const& other) const noexcept;
-    bool operator!=(Rank const& other) const noexcept;
-    static bool compare(Rank const& a, Rank const& b) noexcept;
-};
-
-// File: Rank.cpp
-#include "Rank.h"
-Rank::Rank(std::string tier, int points) : tier_(std::move(tier)), points_(points) {}
-const std::string& Rank::tier() const noexcept { return tier_; }
-int Rank::points() const noexcept { return points_; }
-bool Rank::operator==(Rank const& other) const noexcept {
-    return tier_ == other.tier_ && points_ == other.points_;
-}
-bool Rank::operator!=(Rank const& other) const noexcept { return !(*this == other); }
-bool Rank::compare(Rank const& a, Rank const& b) noexcept {
-    return a.points_ < b.points_;
-}
-
-// File: Champion.h
-#pragma once
-#include <string>
-
-class Champion {
-    std::string name_;
-    std::string imageURL_;
-public:
-    Champion(std::string name, std::string imageURL);
-    const std::string& name() const noexcept;
-};
-
-// File: Champion.cpp
-#include "Champion.h"
-Champion::Champion(std::string name, std::string imageURL)
-    : name_(std::move(name)), imageURL_(std::move(imageURL)) {}
-const std::string& Champion::name() const noexcept { return name_; }
-
-// File: Player.h
-#pragma once
-#include <string>
-#include "Champion.h"
-#include "Rank.h"
-
-class Player {
-    std::string name_;
-    Champion champ_;
-    Rank rank_;
-public:
-    Player(std::string name, Champion champ, Rank rank);
-    Player(Player const& other);
-    Player& operator=(Player other);
-    ~Player() = default;
-    const Rank& rank() const noexcept;
-    const std::string& name() const noexcept;
-    void setChampion(Champion c);
-    const Champion& champion() const noexcept;
-    friend void swap(Player& a, Player& b) noexcept;
-};
-
-// File: Player.cpp
-#include "Player.h"
-#include <utility>
-Player::Player(std::string name, Champion champ, Rank rank)
-    : name_(std::move(name)), champ_(std::move(champ)), rank_(std::move(rank)) {}
-Player::Player(Player const& other)
-    : name_(other.name_), champ_(other.champ_), rank_(other.rank_) {}
-Player& Player::operator=(Player other) {
-    swap(*this, other);
-    return *this;
-}
-void swap(Player& a, Player& b) noexcept {
-    using std::swap;
-    swap(a.name_, b.name_);
-    swap(a.champ_, b.champ_);
-    swap(a.rank_, b.rank_);
-}
-const Rank& Player::rank() const noexcept { return rank_; }
-const std::string& Player::name() const noexcept { return name_; }
-void Player::setChampion(Champion c) { champ_ = std::move(c); }
-const Champion& Player::champion() const noexcept { return champ_; }
-
-// File: Drafter.h
-#pragma once
-#include <memory>
-#include "Champion.h"
-class Server;
-
-class Drafter {
-public:
-    virtual ~Drafter() noexcept = default;
-    virtual Champion draftChampion(Server const& s) const = 0;
-    virtual std::unique_ptr<Drafter> clone() const = 0;
-};
-
-class RandomDrafter : public Drafter {
-public:
-    Champion draftChampion(Server const& s) const override;
-    std::unique_ptr<Drafter> clone() const override;
-};
-
-class HighWinRateDrafter : public Drafter {
-public:
-    Champion draftChampion(Server const& s) const override;
-    std::unique_ptr<Drafter> clone() const override;
-    // funcție specifică
-    double threshold() const noexcept;
-};
-
-class BalancedDrafter : public Drafter {
-public:
-    Champion draftChampion(Server const& s) const override;
-    std::unique_ptr<Drafter> clone() const override;
-};
-
-// File: Drafter.cpp
-#include "Drafter.h"
-#include "Server.h"
-#include "NoPlayersException.h" // ensure exception definitions
-#include <random>
-
-std::unique_ptr<Drafter> RandomDrafter::clone() const {
-    return std::make_unique<RandomDrafter>(*this);
-}
-Champion RandomDrafter::draftChampion(Server const& s) const {
-    auto players = s.getPlayers();
-    if(players.empty()) throw NoPlayersException();
-    std::mt19937 gen{std::random_device{}()};
-    std::uniform_int_distribution<> dist(0, players.size()-1);
-    return players[dist(gen)].champion();
-}
-
-std::unique_ptr<Drafter> HighWinRateDrafter::clone() const {
-    return std::make_unique<HighWinRateDrafter>(*this);
-}
-double HighWinRateDrafter::threshold() const noexcept { return 0.6; }
-Champion HighWinRateDrafter::draftChampion(Server const& s) const {
-    // exemplu dummy: return most popular
-    return s.getMostPopularChampion();
-}
-
-std::unique_ptr<Drafter> BalancedDrafter::clone() const {
-    return std::make_unique<BalancedDrafter>(*this);
-}
-Champion BalancedDrafter::draftChampion(Server const& s) const {
-    // echilibrare: pick median player champion
-    return s.getMedianChampion();
-}
-
-// File: Server.h
-#pragma once
+#include <iostream>
 #include <string>
 #include <vector>
-#include <memory>
-#include "Player.h"
-#include "Rank.h"
-#include "Drafter.h"
+#include <sstream>
+#include <algorithm>
+#include <unordered_map>
 
-class Server {
-    std::string name_;
-    Rank rank_;
-    std::vector<Player> players_;
-    std::unique_ptr<Drafter> drafter_;
+
+class Rank {
+private:
+    std::string tier;  
+    int points;
+
 public:
-    Server(std::string name, Rank r, std::unique_ptr<Drafter> d);
-    Server(Server const& other);
-    Server& operator=(Server other);
-    ~Server() = default;
-    void addPlayer(Player p);
-    bool removePlayer(const std::string& name);
-    void setDrafter(std::unique_ptr<Drafter> d);
-    Champion performDraft() const;
-    Champion getMostPopularChampion() const;
-    Champion getMedianChampion() const;
-    const std::vector<Player>& getPlayers() const noexcept;
-    friend void swap(Server& a, Server& b) noexcept;
+    
+    Rank(const std::string& tier, int points)
+        : tier(tier), points(points) {}
+
+    
+    const std::string& getTier() const { return tier; }
+    int getPoints() const { return points; }
+
+    // Op== pentru comparare
+    
+    bool operator==(const Rank& other) const {
+        return (tier == other.tier && points == other.points);
+    }
+
+    // Op<< pentru afisare
+    
+    friend std::ostream& operator<<(std::ostream& os, const Rank& rank) {
+        os << rank.tier << " (" << rank.points << " pts)";
+        return os;
+    }
 };
 
-// File: Server.cpp
-#include "Server.h"
-#include "InvalidRankException.h"
-#include "NoPlayersException.h"
-#include <algorithm>
 
-Server::Server(std::string name, Rank r, std::unique_ptr<Drafter> d)
-    : name_(std::move(name)), rank_(std::move(r)), drafter_(std::move(d)) {}
 
-Server::Server(Server const& other)
-    : name_(other.name_), rank_(other.rank_),
-      players_(other.players_),
-      drafter_(other.drafter_ ? other.drafter_->clone() : nullptr) {}
+class Champion {
+private:
+    std::string name;
+    std::string imageURL;
 
-Server& Server::operator=(Server other) {
-    swap(*this, other);
-    return *this;
-}
+public:
+    // Cons de init
+    
+    Champion(const std::string& name, const std::string& imageURL)
+        : name(name), imageURL(imageURL) {}
 
-void swap(Server& a, Server& b) noexcept {
-    using std::swap;
-    swap(a.name_, b.name_);
-    swap(a.rank_, b.rank_);
-    swap(a.players_, b.players_);
-    swap(a.drafter_, b.drafter_);
-}
+    
+    const std::string& getName() const { return name; }
+    const std::string& getImageURL() const { return imageURL; }
 
-void Server::addPlayer(Player p) {
-    if(p.rank() != rank_) throw InvalidRankException();
-    players_.push_back(std::move(p));
-}
-
-bool Server::removePlayer(const std::string& name) {
-    auto it = std::remove_if(players_.begin(), players_.end(),
-        [&](Player const& pl){ return pl.name() == name; });
-    if(it == players_.end()) return false;
-    players_.erase(it, players_.end());
-    return true;
-}
-
-void Server::setDrafter(std::unique_ptr<Drafter> d) {
-    drafter_ = std::move(d);
-}
-
-Champion Server::getMostPopularChampion() const {
-    if(players_.empty()) throw NoPlayersException();
-    std::unordered_map<std::string,int> count;
-    for(auto const& pl: players_) count[pl.champion().name()]++;
-    auto best = std::max_element(count.begin(), count.end(),
-        [](auto const& a, auto const& b){ return a.second < b.second; });
-    return Champion(best->first, "");
-}
-
-Champion Server::getMedianChampion() const {
-    if(players_.empty()) throw NoPlayersException();
-    std::vector<std::string> names;
-    for(auto const& pl: players_) names.push_back(pl.champion().name());
-    std::sort(names.begin(), names.end());
-    return Champion(names[names.size()/2], "");
-}
-
-Champion Server::performDraft() const {
-    if(!drafter_) throw DrafterException();
-    if(players_.empty()) throw NoPlayersException();
-    // demonstrație dynamic_cast
-    if(auto* ptr = dynamic_cast<HighWinRateDrafter*>(drafter_.get())) {
-        double th = ptr->threshold(); (void)th; // folosit threshold
+    // Op<< pentru afisare
+    
+    friend std::ostream& operator<<(std::ostream& os, const Champion& champ) {
+        os << "Champion: " << champ.name << " [Image: " << champ.imageURL << "]";
+        return os;
     }
-    return drafter_->draftChampion(*this);
-}
+};
 
-const std::vector<Player>& Server::getPlayers() const noexcept { return players_; }
 
-// File: main.cpp
-#include <iostream>
-#include <memory>
-#include "Server.h"
-#include "Drafter.h"
-#include "Rank.h"
-#include "Champion.h"
-#include "Player.h"
-#include "Exceptions.h"
+class Player {
+private:
+    std::string playerName;
+    Champion champion; 
+    Rank rank;        
+
+public:
+    // Cons de init    
+    Player(const std::string& playerName, const Champion& champion, const Rank& rank)
+        : playerName(playerName), champion(champion), rank(rank) {}
+
+    
+    const std::string& getPlayerName() const { return playerName; }
+    const Champion& getChampion() const { return champion; }
+    const Rank& getRank() const { return rank; }
+
+  
+    // mod campion favorit  
+    void setChampion(const Champion& newChampion) {
+        champion = newChampion;
+    }
+
+    // Op << pt afisare 
+    
+    friend std::ostream& operator<<(std::ostream& os, const Player& player) {
+        os << "Player: " << player.playerName << "\n  " << player.champion 
+           << "\n  Rank: " << player.rank;
+        return os;
+    }
+};
+
+
+class Server {
+private:
+    std::string serverName;
+    Rank serverRank;                  
+    std::vector<Player> players;       
+
+   // repr a jucatorilor
+ 
+    std::string playersToString() const {
+        std::ostringstream oss;
+        for (const auto& player : players) {
+            oss << player << "\n";
+        }
+        return oss.str();
+    }
+
+public:
+  
+    Server(const std::string& serverName, const Rank& serverRank, const std::vector<Player>& players)
+        : serverName(serverName), serverRank(serverRank), players(players) {}
+
+    // Cons de init
+  
+    Server(const std::string& serverName, const Rank& serverRank)
+        : serverName(serverName), serverRank(serverRank) {}
+
+    // cons de cop
+  
+    Server(const Server& other)
+        : serverName(other.serverName), serverRank(other.serverRank), players(other.players) {}
+
+    // Op de cop
+  
+    Server& operator=(const Server& other) {
+        if (this != &other) {
+            serverName = other.serverName;
+            serverRank = other.serverRank;
+            players = other.players;
+        }
+        return *this;
+    }
+
+    // Destructor
+    ~Server() {
+    }
+
+   
+    bool addPlayer(const Player& player) {
+        if (player.getRank() == serverRank) {
+            players.push_back(player);
+            return true;
+        }
+        std::cerr << "Eroare: Jucătorul " << player.getPlayerName() 
+                  << " are rank diferit de server (" << serverRank << ").\n";
+        return false;
+    }
+
+   
+    bool removePlayer(const std::string& playerName) {
+        auto it = std::remove_if(players.begin(), players.end(),
+            [&playerName](const Player& p) { return p.getPlayerName() == playerName; });
+        if (it != players.end()) {
+            players.erase(it, players.end());
+            return true;
+        }
+        return false;
+    }
+   
+    bool updatePlayerChampion(const std::string& playerName, const Champion& newChampion) {
+        for (auto& player : players) {
+            if (player.getPlayerName() == playerName) {
+                player.setChampion(newChampion);
+                return true;
+            }
+        }
+        return false;
+    }
+   
+    Champion getMostPopularChampion() const {
+        std::unordered_map<std::string, int> champCount;
+        
+        for (const auto& player : players) {
+            ++champCount[player.getChampion().getName()];
+        }
+        
+        std::string popularName;
+        int maxCount = 0;
+        for (const auto& pair : champCount) {
+            if (pair.second > maxCount) {
+                maxCount = pair.second;
+                popularName = pair.first;
+            }
+        }
+       
+        
+        return Champion(popularName, "unknown");
+    }
+    
+    friend std::ostream& operator<<(std::ostream& os, const Server& server) {
+        os << "Server: " << server.serverName 
+           << "\nRank server: " << server.serverRank
+           << "\nJucători:\n" << server.playersToString();
+        return os;
+    }
+};
 
 int main() {
-    try {
-        auto drafter = std::make_unique<HighWinRateDrafter>();
-        Server srv("EUW", {"Gold",2500}, std::move(drafter));
-        srv.addPlayer({"Alice", {"Lux", "url"}, {"Gold",2500}});
-        srv.addPlayer({"Bob",   {"Garen","url"}, {"Gold",2500}});
-        Champion pick = srv.performDraft();
-        std::cout << "Drafted: " << pick.name() << '\n';
-    } catch(const LoLException& ex) {
-        std::cerr << "Error: " << ex.what() << std::endl;
-    }
+    
+
+    Rank bronze("Bronze", 800);
+    Rank silver("Silver", 1500);
+    Rank gold("Gold", 2500);
+    
+    Champion champAshe("Ashe", "http://imagelink.com/ashe.jpg");
+    Champion champGaren("Garen", "http://imagelink.com/garen.jpg");
+    Champion champLux("Lux", "http://imagelink.com/lux.jpg");
+    Champion champAnnie("Annie", "http://imagelink.com/annie.jpg");
+
+    
+    Player player1("PlayerOne", champAshe, bronze);
+    Player player2("PlayerTwo", champGaren, bronze);
+    Player player3("PlayerThree", champLux, bronze);
+    
+    Player player4("PlayerFour", champAnnie, silver); // va fi refuzat de serverul Bronze
+
+    
+    Server serverBronze("Server-Bronze", bronze);
+    
+    serverBronze.addPlayer(player1);
+    serverBronze.addPlayer(player2);
+    serverBronze.addPlayer(player3);
+    
+    // Adaugare jucator cu rang diferit (va fi refuzat)
+    
+    serverBronze.addPlayer(player4);
+    
+    std::cout << "=== Afisare Server Bronze ===\n" << serverBronze << "\n";
+
+    // schimbare campion pt un jucator
+    
+    std::cout << "\nActualizare campion pentru PlayerTwo...\n";
+    serverBronze.updatePlayerChampion("PlayerTwo", champLux);
+    std::cout << serverBronze << "\n";
+
+    // Cel mai popular campion 
+    
+    Champion popular = serverBronze.getMostPopularChampion();
+    std::cout << "\nCampionul cel mai popular de pe server: " << popular << "\n";
+
+    
+    std::cout << "\nDemonstratie constructor de copiere si operator=:\n";
+    Server copyServer = serverBronze;  
+    Server assignServer("Temp", bronze);
+    
+    assignServer = serverBronze;
+    std::cout << "CopyServer:\n" << copyServer << "\n";
+    std::cout << "AssignServer:\n" << assignServer << "\n";
+
     return 0;
 }
