@@ -8,3 +8,7 @@ Champion::Champion(std::string name, std::string imageURL) noexcept
 const std::string& Champion::name() const noexcept {
     return name_;
 }
+
+const std::string& Champion::imageURL() const noexcept { 
+  return imageURL_; 
+}
