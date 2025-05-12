@@ -13,6 +13,9 @@ public:
     bool operator==(Rank const& o) const noexcept;
     bool operator!=(Rank const& o) const noexcept;
     static bool compare(Rank const& a, Rank const& b) noexcept;
-
-friend std::ostream& operator<<(std::ostream& os, Rank const& r);
 };
+
+inline std::ostream& operator<<(std::ostream& os, Rank const& r) {
+    os << r.tier() << " (" << r.points() << " pts)";
+    return os;
+}
