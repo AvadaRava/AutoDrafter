@@ -66,7 +66,7 @@ Champion Server::getMedianChampion() const {
 Champion Server::performDraft() const {
     if(!drafter_) throw DrafterException();
     // exemplu de dynamic_cast
-    if(auto* hw = dynamic_cast<HighWinRateDrafter*>(drafter_.get())) {
+    if (auto const* hw = dynamic_cast<HighWinRateDrafter const*>(drafter_.get())) {
         (void)hw->threshold();  
     }
     return drafter_->draftChampion(*this);
