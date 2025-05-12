@@ -2,6 +2,7 @@
 #include <string>
 #include "Champion.h"
 #include "Rank.h"
+#include <ostream>
 
 class Player {
     std::string name_;
@@ -21,3 +22,10 @@ public:
 
     friend void swap(Player& a, Player& b) noexcept;
 };
+
+inline std::ostream& operator<<(std::ostream& os, Player const& p) {
+    os << "Player: "      << p.name()
+       << " | Champ: "    << p.champion().name()
+       << " | Rank: "     << p.rank();
+    return os;
+}
