@@ -15,5 +15,5 @@ public:
     static bool compare(Rank const& a, Rank const& b) noexcept;
 
  
-  friend std::ostream& operator<<(std::ostream& os, Rank const& r)
+  friend std::ostream& operator<<(std::ostream& os, Rank const& r);
 };
