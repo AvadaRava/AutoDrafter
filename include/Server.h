@@ -5,6 +5,7 @@
 #include "Player.h"
 #include "Rank.h"
 #include "Drafter.h"
+#include <ostream> 
 
 class Server {
     std::string                name_;
