@@ -1,6 +1,6 @@
 #include "Rank.h"
 #include <utility>
-#include <ostream>
+
 
 Rank::Rank(std::string tier, int points) noexcept
   : tier_{std::move(tier)}, points_{points}
@@ -20,5 +20,9 @@ bool Rank::operator==(Rank const& o) const noexcept {
 
 bool Rank::operator!=(Rank const& o) const noexcept {
     return !(*this == o);
+}
+
+bool Rank::compare(Rank const& a, Rank const& b) noexcept {
+  return a.points_ < b.points_;
 }
 
