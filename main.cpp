@@ -16,7 +16,6 @@ int main() {
         // 2. Creăm doi jucători și îi adăugăm pe server
         Player alice("Alice", Champion{"Lux","url"}, Rank{"Gold",2500});
         Player bob  ("Bob",   Champion{"Garen","url"}, Rank{"Gold",2500});
-        std::cout << "Gold rank este: " << gold << "\n";
         
         srv.addPlayer(alice);
         srv.addPlayer(bob);
