@@ -2,6 +2,8 @@
 #include "Exceptions.h"
 #include <algorithm>
 #include <unordered_map>
+#include <iostream>
+#include <sstream>
 
 Server::Server(std::string name, Rank rank, std::unique_ptr<Drafter> dr)
   : name_{std::move(name)}
@@ -75,6 +77,15 @@ Champion Server::performDraft() const {
 const std::vector<Player>& Server::getPlayers() const noexcept {
     return players_;
 }
+// helper pentru operator<<
+std::string Server::playersToString() const {
+    std::ostringstream oss;
+    for(auto const& p : players_) {
+        oss << p << "\n";
+    }
+    return oss.str();
+}
+
 std::ostream& operator<<(std::ostream& os, Server const& s) {
      os << "Server: " << s.getName()
        << "\nRank server: " << s.getRank()
