@@ -22,7 +22,3 @@ bool Rank::operator!=(Rank const& o) const noexcept {
     return !(*this == o);
 }
 
-std::ostream& operator<<(std::ostream& os, Rank const& r) {
-    os << r.tier() << " (" << r.points() << " pts)";
-    return os;
-}
