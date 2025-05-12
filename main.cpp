@@ -12,11 +12,11 @@
 int main() {
     try {
         // ─────────────────────────────────────────────────────────────────────
-        // 1. Construim serverul cu strategia inițială
+        // 1. Construim serverul cu strategia initiala
         auto drafter = std::make_unique<HighWinRateDrafter>();
         Server srv("EUW", Rank{"Gold",2500}, std::move(drafter));
         // ─────────────────────────────────────────────────────────────────────
-        // 2. Creăm doi jucători și îi adăugăm pe server
+        // 2. Cream doi jucatori si ii adaugam pe server
         Player alice("Alice", Champion{"Lux","url"}, Rank{"Gold",2500});
         Player bob  ("Bob",   Champion{"Garen","url"}, Rank{"Gold",2500});
         
@@ -34,27 +34,27 @@ int main() {
         std::cout << "Alice joacă acum cu: " 
                   << alice.champion().name() << "\n";
         // ─────────────────────────────────────────────────────────────────────
-        // 5. Folosim Rank::tier() și Rank::points()
+        // 5. Folosim Rank::tier() si Rank::points()
         std::cout << "\n[TEST] info rank Alice:\n"
                   << " Tier:   " << alice.rank().tier()  << "\n"
                   << " Puncte: " << alice.rank().points() << "\n";
         // ─────────────────────────────────────────────────────────────────────
         // 6. Folosim Server::removePlayer() pentru Bob
-        std::cout << "\n[TEST] ștergem Bob de pe server...\n";
+        std::cout << "\n[TEST] stergem Bob de pe server...\n";
         bool removed = srv.removePlayer("Bob");
         std::cout << (removed 
                       ? "→ Bob a fost eliminat cu succes\n"
-                      : "→ Bob nu a fost găsit\n");
-        std::cout << "\nServer după ștergere:\n" 
+                      : "→ Bob nu a fost gasit\n");
+        std::cout << "\nServer dupa stergere:\n" 
                   << srv << "\n";
 
         // ─────────────────────────────────────────────────────────────────────
-        // 7. Schimbăm strategia la Random și re-draft
+        // 7. Schimbam strategia la Random si re-draft
         srv.setDrafter(std::make_unique<RandomDrafter>());
         pick = srv.performDraft();
         std::cout << "Next drafted (random): " << pick.name() << "\n";
         // ─────────────────────────────────────────────────────────────────────
-        // 8. Demonstrație utilizare Rank::compare
+        // 8. Demonstratie utilizare Rank::compare
         std::cout << "\n[TEST] sortare ranguri cu Rank::compare...\n";
         std::vector<Rank> ranks{
             alice.rank(),
