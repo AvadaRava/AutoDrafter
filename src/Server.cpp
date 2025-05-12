@@ -83,3 +83,4 @@ std::ostream& operator<<(std::ostream& os, Server const& s) {
         os << "  - " << p << "\n";
     }
     return os;
+}
