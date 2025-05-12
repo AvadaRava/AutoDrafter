@@ -75,3 +75,11 @@ Champion Server::performDraft() const {
 const std::vector<Player>& Server::getPlayers() const noexcept {
     return players_;
 }
+std::ostream& operator<<(std::ostream& os, Server const& s) {
+    os << "Server: " << s.name_ 
+       << "\nRank server: " << s.rank_ 
+       << "\nJucători:\n";
+    for (auto const& p : s.players_) {
+        os << "  - " << p << "\n";
+    }
+    return os;
