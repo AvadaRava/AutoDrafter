@@ -12,6 +12,8 @@ class Server {
     Rank                       rank_;
     std::vector<Player>        players_;
     std::unique_ptr<Drafter>   drafter_;
+//helper intern pt operator<<
+std::string playersToString() const;
 
 public:
     Server(std::string name, Rank rank, std::unique_ptr<Drafter> dr);
@@ -30,5 +32,9 @@ public:
     const std::string& getName()    const noexcept { return name_; }
     const Rank&       getRank()     const noexcept { return rank_; }
 
+     // swap prieten, pentru copy,swap
+     friend void swap(Server& a, Server& b) noexcept;
+
+      // output-stream
     friend std::ostream& operator<<(std::ostream& os, Server const& s);
 };
