@@ -25,8 +25,3 @@ bool Rank::operator!=(Rank const& o) const noexcept {
 bool Rank::compare(Rank const& a, Rank const& b) noexcept {
   return a.points_ < b.points_;
 }
-
-  friend std::ostream& operator<<(std::ostream& os, Rank const& r) {
-        os << r.tier_ << " (" << r.points_ << " pts)";
-        return os;
-    }
