@@ -1,5 +1,6 @@
 #include "Player.h"
 #include <utility>
+#include <ostream>
 
 Player::Player(std::string name, Champion champ, Rank rank) noexcept
   : name_{std::move(name)}
