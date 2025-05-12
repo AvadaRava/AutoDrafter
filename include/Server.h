@@ -25,8 +25,9 @@ public:
     Champion performDraft() const;
     Champion getMostPopularChampion() const;
     Champion getMedianChampion() const;
-
     const std::vector<Player>& getPlayers() const noexcept;
+    const std::string& getName()    const noexcept { return name_; }
+    const Rank&       getRank()     const noexcept { return rank_; }
 
-    friend void swap(Server& a, Server& b) noexcept;
+    friend std::ostream& operator<<(std::ostream& os, Server const& s);
 };
