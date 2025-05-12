@@ -6,20 +6,23 @@
 #include "Player.h"
 #include "Drafter.h"
 #include "Server.h"
+#include <vector>
+#include <algorithm>
 
 int main() {
     try {
+        // ─────────────────────────────────────────────────────────────────────
         // 1. Construim serverul cu strategia inițială
         auto drafter = std::make_unique<HighWinRateDrafter>();
         Server srv("EUW", Rank{"Gold",2500}, std::move(drafter));
-
+        // ─────────────────────────────────────────────────────────────────────
         // 2. Creăm doi jucători și îi adăugăm pe server
         Player alice("Alice", Champion{"Lux","url"}, Rank{"Gold",2500});
         Player bob  ("Bob",   Champion{"Garen","url"}, Rank{"Gold",2500});
         
         srv.addPlayer(alice);
         srv.addPlayer(bob);
-
+        // ─────────────────────────────────────────────────────────────────────
         // 3. Facem un draft
         Champion pick = srv.performDraft();
         std::cout << "Drafted champion: " << pick.name() << "\n";
@@ -30,12 +33,12 @@ int main() {
         alice.setChampion(Champion{"Annie","url"});
         std::cout << "Alice joacă acum cu: " 
                   << alice.champion().name() << "\n";
-
+        // ─────────────────────────────────────────────────────────────────────
         // 5. Folosim Rank::tier() și Rank::points()
         std::cout << "\n[TEST] info rank Alice:\n"
                   << " Tier:   " << alice.rank().tier()  << "\n"
                   << " Puncte: " << alice.rank().points() << "\n";
-
+        // ─────────────────────────────────────────────────────────────────────
         // 6. Folosim Server::removePlayer() pentru Bob
         std::cout << "\n[TEST] ștergem Bob de pe server...\n";
         bool removed = srv.removePlayer("Bob");
@@ -50,6 +53,20 @@ int main() {
         srv.setDrafter(std::make_unique<RandomDrafter>());
         pick = srv.performDraft();
         std::cout << "Next drafted (random): " << pick.name() << "\n";
+        // ─────────────────────────────────────────────────────────────────────
+        // 8. Demonstrație utilizare Rank::compare
+        std::cout << "\n[TEST] sortare ranguri cu Rank::compare...\n";
+        std::vector<Rank> ranks{
+            alice.rank(),
+            bob.rank(),
+            Rank{"Platinum", 3000}
+        };
+        std::sort(ranks.begin(), ranks.end(), Rank::compare);
+        for (auto const& r : ranks) {
+            std::cout << r << "  ";
+        }
+        std::cout << "\n";
+
 
     } catch (LoLException const& ex) {
         std::cerr << "Error: " << ex.what() << "\n";
