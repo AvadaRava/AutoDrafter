@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <iostream>
 #include <sstream>
-
+#include "Rank.h"
 Server::Server(std::string name, Rank rank, std::unique_ptr<Drafter> dr)
   : name_{std::move(name)}
   , rank_{std::move(rank)}
